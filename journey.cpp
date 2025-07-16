@@ -71,7 +71,7 @@ void Journey::on_pushButton_bookTicket_clicked()
     }
 
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);  // 确保跟文件编码一致
+    in.setCodec("UTF-8");  // 确保跟文件编码一致
 
     QList<QString> fromList, toList, fareList;
     // 跳过首行

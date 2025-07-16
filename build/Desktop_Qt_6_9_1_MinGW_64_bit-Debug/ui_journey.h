@@ -36,7 +36,7 @@ public:
     QAction *actionAbout_Qt;
     QWidget *centralwidget;
     QLabel *label_time;
-    QPushButton *pushButton_bookTicket;
+    QPushButton *pushButton_queryTicket;
     QWidget *layoutWidget;
     QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout_4;
@@ -79,12 +79,12 @@ public:
         QFont font;
         font.setBold(true);
         label_time->setFont(font);
-        pushButton_bookTicket = new QPushButton(centralwidget);
-        pushButton_bookTicket->setObjectName("pushButton_bookTicket");
-        pushButton_bookTicket->setGeometry(QRect(200, 230, 84, 28));
+        pushButton_queryTicket = new QPushButton(centralwidget);
+        pushButton_queryTicket->setObjectName("pushButton_queryTicket");
+        pushButton_queryTicket->setGeometry(QRect(70, 130, 81, 28));
         layoutWidget = new QWidget(centralwidget);
         layoutWidget->setObjectName("layoutWidget");
-        layoutWidget->setGeometry(QRect(160, 60, 161, 151));
+        layoutWidget->setGeometry(QRect(20, 160, 212, 171));
         verticalLayout_3 = new QVBoxLayout(layoutWidget);
         verticalLayout_3->setObjectName("verticalLayout_3");
         verticalLayout_3->setContentsMargins(0, 0, 0, 0);
@@ -162,7 +162,7 @@ public:
         Journey->setCentralWidget(centralwidget);
         menubar = new QMenuBar(Journey);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 548, 25));
+        menubar->setGeometry(QRect(0, 0, 548, 17));
         menuFile = new QMenu(menubar);
         menuFile->setObjectName("menuFile");
         menuHelp = new QMenu(menubar);
@@ -196,7 +196,7 @@ public:
         actionAbout->setText(QCoreApplication::translate("Journey", "About", nullptr));
         actionAbout_Qt->setText(QCoreApplication::translate("Journey", "About Qt", nullptr));
         label_time->setText(QString());
-        pushButton_bookTicket->setText(QCoreApplication::translate("Journey", "Book Ticket", nullptr));
+        pushButton_queryTicket->setText(QCoreApplication::translate("Journey", "Query Ticket", nullptr));
         label_4->setText(QCoreApplication::translate("Journey", "Name", nullptr));
         label->setText(QCoreApplication::translate("Journey", "From", nullptr));
         label_2->setText(QCoreApplication::translate("Journey", "To", nullptr));

@@ -29,7 +29,7 @@ private slots:
 
     void on_actionHome_triggered();
 
-    void on_pushButton_bookTicket_clicked();
+    void on_pushButton_queryTicket_clicked();
 
     void on_dateEdit_dateChanged(const QDate &date);
 

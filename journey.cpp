@@ -62,7 +62,8 @@ void Journey::on_actionHome_triggered()
     QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
 }
 
-void Journey::on_pushButton_bookTicket_clicked()
+
+void Journey::on_pushButton_queryTicket_clicked()
 {
     QFile file(":/fare.csv");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {

@@ -32,26 +32,26 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_bookTicket">
+   <widget class="QPushButton" name="pushButton_queryTicket">
     <property name="geometry">
      <rect>
-      <x>200</x>
-      <y>230</y>
-      <width>84</width>
+      <x>70</x>
+      <y>130</y>
+      <width>81</width>
       <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>Book Ticket</string>
+     <string>Query Ticket</string>
     </property>
    </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>60</y>
-      <width>161</width>
-      <height>151</height>
+      <x>20</x>
+      <y>160</y>
+      <width>212</width>
+      <height>171</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -138,7 +138,7 @@
      <x>0</x>
      <y>0</y>
      <width>548</width>
-     <height>25</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

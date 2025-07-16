@@ -7,6 +7,14 @@
 #include <QFile>
 #include <QString>
 #include <QDebug>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QTextCodec>
+#include <QCryptographicHash>
+#include <QRandomGenerator>
 
 Journey::Journey(QWidget *parent) :
     QMainWindow(parent),
@@ -17,11 +25,180 @@ Journey::Journey(QWidget *parent) :
     connect(timer, SIGNAL(timeout()),
             this, SLOT(mytimer()));
     timer->start(1000);  // update every 1 sec
+    
+    // Initialize the booking button as disabled
+    ui->pushButton_bookTicket->setEnabled(false);
 }
 
 Journey::~Journey()
 {
     delete ui;
+}
+
+TicketQueryResult Journey::queryTickets(const TicketQueryRequest& request)
+{
+    TicketQueryResult result;
+    result.success = false;
+    result.total = 0;
+    
+    QFile file(":/fare.csv");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << file.errorString();
+        result.message = "Could not open fare data file";
+        return result;
+    }
+
+    QTextStream in(&file);
+    in.setCodec("UTF-8");
+
+    // Skip header line
+    QString header = in.readLine();
+    
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty()) continue;
+
+        // Remove BOM if present
+        if (line.startsWith(QChar(0xFEFF)))
+            line.remove(0, 1);
+
+        QStringList parts = line.split(',');
+        if (parts.size() < 5) continue;
+
+        QString fromStation = parts.at(0).trimmed();
+        QString toStation = parts.at(1).trimmed();
+        QString fareStr = parts.at(2).trimmed();
+        QString trainId = parts.at(3).trimmed();
+        QString departTime = parts.at(4).trimmed();
+
+        // Filter by from and to stations
+        if (fromStation == request.fromStation && toStation == request.toStation) {
+            TicketInfo ticket;
+            ticket.trainNumber = "G" + trainId;
+            ticket.departTime = departTime;
+            
+            // Calculate arrival time (approximate - add 4 hours)
+            QTime departQTime = QTime::fromString(departTime, "hh:mm");
+            QTime arrivalQTime = departQTime.addSecs(4 * 3600); // Add 4 hours
+            ticket.arriveTime = arrivalQTime.toString("hh:mm");
+            
+            ticket.price = fareStr.toDouble();
+            ticket.availableSeats = 30 + (QRandomGenerator::global()->generate() % 50); // Random seats 30-79
+            
+            result.tickets.append(ticket);
+        }
+    }
+    
+    result.total = result.tickets.size();
+    if (result.total > 0) {
+        result.success = true;
+        result.message = QString("Found %1 tickets").arg(result.total);
+    } else {
+        result.message = "No tickets found for the selected route";
+    }
+    
+    return result;
+}
+
+TicketBookingResult Journey::bookTicket(const TicketBookingRequest& request)
+{
+    TicketBookingResult result;
+    result.success = false;
+    
+    // Validate required fields
+    if (request.trainNumber.isEmpty() || request.passengerName.isEmpty() || 
+        request.passengerId.isEmpty() || request.fromStation.isEmpty() || 
+        request.toStation.isEmpty()) {
+        result.message = "Missing required booking information";
+        return result;
+    }
+    
+    // Generate order ID
+    QString timestamp = QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
+    result.orderId = timestamp + QString::number(QRandomGenerator::global()->generate() % 1000);
+    
+    // Generate coach and seat number
+    result.coachNo = QString(QChar('A' + (QRandomGenerator::global()->generate() % 9)));
+    result.seatNo = QString::number(1 + QRandomGenerator::global()->generate() % 60) + 
+                   QString(QChar('A' + (QRandomGenerator::global()->generate() % 6)));
+    
+    // For simplicity, always succeed if validation passes
+    result.success = true;
+    result.message = "Booking successful";
+    
+    // Generate a simple QR code placeholder (base64 encoded string)
+    QByteArray qrData = QString("Train:%1|From:%2|To:%3|Date:%4|Passenger:%5|Order:%6")
+                        .arg(request.trainNumber)
+                        .arg(request.fromStation)
+                        .arg(request.toStation)
+                        .arg(request.departDate)
+                        .arg(request.passengerName)
+                        .arg(result.orderId)
+                        .toUtf8();
+    result.qrCode = qrData.toBase64();
+    
+    return result;
+}
+
+void Journey::on_pushButton_queryTickets_clicked()
+{
+    QString fromStation = ui->textEdit->toPlainText().trimmed();
+    QString toStation = ui->textEdit_2->toPlainText().trimmed();
+    QString journeyDate = ui->dateEdit->text();
+    
+    if (fromStation.isEmpty() || toStation.isEmpty()) {
+        QMessageBox::warning(this, "Error!", "Please enter both From and To stations");
+        return;
+    }
+    
+    if (fromStation == toStation) {
+        QMessageBox::warning(this, "Error!", "From and To stations cannot be the same");
+        return;
+    }
+    
+    // Create query request
+    TicketQueryRequest request;
+    request.fromStation = fromStation;
+    request.toStation = toStation;
+    request.journeyDate = journeyDate;
+    request.sortBy = "departTime";
+    request.page = 1;
+    request.pageSize = 20;
+    
+    // Query tickets
+    lastQueryResult = queryTickets(request);
+    
+    // Update UI
+    ui->listWidget_tickets->clear();
+    
+    if (lastQueryResult.success) {
+        for (const TicketInfo& ticket : lastQueryResult.tickets) {
+            QString ticketText = QString("%1 | %2-%3 | ¥%4 | %5 seats")
+                                .arg(ticket.trainNumber)
+                                .arg(ticket.departTime)
+                                .arg(ticket.arriveTime)
+                                .arg(ticket.price)
+                                .arg(ticket.availableSeats);
+            
+            QListWidgetItem* item = new QListWidgetItem(ticketText);
+            item->setData(Qt::UserRole, QVariant::fromValue(ticket));
+            ui->listWidget_tickets->addItem(item);
+        }
+        
+        ui->pushButton_bookTicket->setEnabled(false); // Enable after selection
+        QMessageBox::information(this, "Query Result", lastQueryResult.message);
+    } else {
+        QMessageBox::warning(this, "Query Failed", lastQueryResult.message);
+    }
+}
+
+void Journey::on_listWidget_tickets_itemClicked()
+{
+    QListWidgetItem* currentItem = ui->listWidget_tickets->currentItem();
+    if (currentItem) {
+        selectedTicket = currentItem->data(Qt::UserRole).value<TicketInfo>();
+        ui->pushButton_bookTicket->setEnabled(true);
+    }
 }
 
 void Journey::mytimer()
@@ -64,97 +241,70 @@ void Journey::on_actionHome_triggered()
 
 void Journey::on_pushButton_bookTicket_clicked()
 {
-    QFile file(":/fare.csv");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << file.errorString();
+    QString passengerName = ui->lineEdit_PassengerName->text().trimmed();
+    QString passengerId = ui->lineEdit_PassengerID->text().trimmed();
+    QString fromStation = ui->textEdit->toPlainText().trimmed();
+    QString toStation = ui->textEdit_2->toPlainText().trimmed();
+    QString journeyDate = ui->dateEdit->text();
+    
+    // Validate input
+    if (passengerName.isEmpty()) {
+        QMessageBox::warning(this, "Error!", "Please enter passenger name");
         return;
     }
-
-    QTextStream in(&file);
-    in.setCodec("UTF-8");  // 确保跟文件编码一致
-
-    QList<QString> fromList, toList, fareList;
-    // 跳过首行
-    QString header = in.readLine();
-
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        // 如果有 BOM，需要去掉：
-        if (line.startsWith(QChar(0xFEFF)))
-            line.remove(0, 1);
-
-        QStringList parts = line.split(',');
-        if (parts.size() < 3) continue;
-
-        fromList.append(parts.at(0).trimmed());
-        toList.append(parts.at(1).trimmed());
-        fareList.append(parts.at(2).trimmed());
+    
+    if (passengerId.isEmpty()) {
+        QMessageBox::warning(this, "Error!", "Please enter passenger ID");
+        return;
     }
-
-    // 后面获取 fromStation/toStation 的方式不变：
-    QString fromStation = ui->textEdit->toPlainText().trimmed();
-    QString toStation   = ui->textEdit_2->toPlainText().trimmed();
-
-    if(fromStation == "----" ||
-            toStation == "----")
-        QMessageBox::warning(this, "Error!", "Please select From and To stations");
-
-    else if (fromStation == toStation)
-        QMessageBox::warning(this, "Error!", "From to To stations can\'t be same.");
-
-    else {
-
-
-        /*
-         * l1 = ("a", "b", "d", "c", "d", "b")
-         * l2 = ("b", "a", "b", "b", "a", "c")
-         * l3 = (2, 4, 3, 5, 4, 5)  // fare
-         * if index of inputs in l1 and l2 are same then fare will be the value at that index in l3
-         * if "d" and "a" are input then index will be 5 hence fare will be the value corresponding to index 5 in l3 i.e. 4
-         * */
-
-        QString cost;
-        int id = -1;
-        for (int i = 0; i < fromList.size(); ++i) {
-            if (fromList[i].trimmed() == fromStation && toList[i].trimmed() == toStation) {
-                id = i;
-                break;
-            }
-        }
-        if (id == -1) {
-            QMessageBox::warning(this, "Error!", "No fare found for the selected stations.");
-            return;
-        }
-        cost = fareList.at(id);
-
-        qDebug() << "fromStation: " << fromStation
-                 << ", toStation: " << toStation
-                 << ", id: " << id
-                 << ", cost: " << cost;
-
+    
+    if (selectedTicket.trainNumber.isEmpty()) {
+        QMessageBox::warning(this, "Error!", "Please select a ticket first");
+        return;
+    }
+    
+    // Create booking request
+    TicketBookingRequest request;
+    request.trainNumber = selectedTicket.trainNumber;
+    request.departDate = journeyDate;
+    request.fromStation = fromStation;
+    request.toStation = toStation;
+    request.passengerName = passengerName;
+    request.passengerId = passengerId;
+    request.seatType = "二等座";
+    request.paymentToken = "";
+    
+    // Book the ticket
+    TicketBookingResult result = bookTicket(request);
+    
+    if (result.success) {
         QMessageBox::information(this,
-                                 "Ticket booked",
-                                 "Hello " +
-                                 ui->lineEdit_PassengerName->text() +
-                                 "!\nYour ticket from " +
-                                 fromStation +
-                                 " to " +
-                                 toStation +
-                                 " on " +
-                                 ui->dateEdit->text() +
-                                 " is confirmed.\n"
-                                 "Cost: ￥" + cost +
-                                 "\n\nDetails:\n" +
-                                 "Passenger Name: " + ui->lineEdit_PassengerName->text() +
-                                 "\nFrom: " + fromStation +
-                                 "\nDate of Journey: " + ui->dateEdit->text() +
-                                 "\nTo: " + toStation +
-                                 "\nCoach No: " +
-                                 QString(QChar('A' + (rand() % 9))) +  // random character
-                                 QString::number(rand() % 9)  // random number
-                                 );
+                                 "Booking Successful",
+                                 "Hello " + passengerName + "!\n"
+                                 "Your ticket is confirmed.\n\n"
+                                 "Details:\n"
+                                 "Train: " + selectedTicket.trainNumber + "\n"
+                                 "From: " + fromStation + "\n"
+                                 "To: " + toStation + "\n"
+                                 "Date: " + journeyDate + "\n"
+                                 "Depart: " + selectedTicket.departTime + "\n"
+                                 "Arrive: " + selectedTicket.arriveTime + "\n"
+                                 "Cost: ¥" + QString::number(selectedTicket.price) + "\n"
+                                 "Order ID: " + result.orderId + "\n"
+                                 "Coach: " + result.coachNo + "\n"
+                                 "Seat: " + result.seatNo + "\n"
+                                 "Passenger: " + passengerName + "\n"
+                                 "ID: " + passengerId);
+        
+        // Clear form after successful booking
+        ui->lineEdit_PassengerName->clear();
+        ui->lineEdit_PassengerID->clear();
+        ui->listWidget_tickets->clear();
+        ui->pushButton_bookTicket->setEnabled(false);
+        selectedTicket = TicketInfo();
+        
+    } else {
+        QMessageBox::warning(this, "Booking Failed", result.message);
     }
 }
 

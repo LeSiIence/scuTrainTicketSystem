@@ -16,6 +16,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
@@ -36,12 +37,17 @@ public:
     QAction *actionAbout_Qt;
     QWidget *centralwidget;
     QLabel *label_time;
+    QPushButton *pushButton_queryTickets;
     QPushButton *pushButton_bookTicket;
+    QListWidget *listWidget_tickets;
     QWidget *layoutWidget;
     QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout_4;
     QLabel *label_4;
     QLineEdit *lineEdit_PassengerName;
+    QHBoxLayout *horizontalLayout_5;
+    QLabel *label_5;
+    QLineEdit *lineEdit_PassengerID;
     QVBoxLayout *verticalLayout_2;
     QVBoxLayout *verticalLayout;
     QHBoxLayout *horizontalLayout;
@@ -62,7 +68,7 @@ public:
     {
         if (Journey->objectName().isEmpty())
             Journey->setObjectName(QString::fromUtf8("Journey"));
-        Journey->resize(548, 478);
+        Journey->resize(600, 450);
         actionHome = new QAction(Journey);
         actionHome->setObjectName(QString::fromUtf8("actionHome"));
         actionQuit = new QAction(Journey);
@@ -79,12 +85,19 @@ public:
         QFont font;
         font.setBold(true);
         label_time->setFont(font);
+        pushButton_queryTickets = new QPushButton(centralwidget);
+        pushButton_queryTickets->setObjectName(QString::fromUtf8("pushButton_queryTickets"));
+        pushButton_queryTickets->setGeometry(QRect(100, 230, 84, 28));
         pushButton_bookTicket = new QPushButton(centralwidget);
         pushButton_bookTicket->setObjectName(QString::fromUtf8("pushButton_bookTicket"));
-        pushButton_bookTicket->setGeometry(QRect(200, 230, 84, 28));
+        pushButton_bookTicket->setGeometry(QRect(300, 230, 84, 28));
+        pushButton_bookTicket->setEnabled(false);
+        listWidget_tickets = new QListWidget(centralwidget);
+        listWidget_tickets->setObjectName(QString::fromUtf8("listWidget_tickets"));
+        listWidget_tickets->setGeometry(QRect(50, 270, 450, 120));
         layoutWidget = new QWidget(centralwidget);
         layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
-        layoutWidget->setGeometry(QRect(160, 60, 161, 151));
+        layoutWidget->setGeometry(QRect(160, 60, 240, 180));
         verticalLayout_3 = new QVBoxLayout(layoutWidget);
         verticalLayout_3->setObjectName(QString::fromUtf8("verticalLayout_3"));
         verticalLayout_3->setContentsMargins(0, 0, 0, 0);
@@ -102,6 +115,21 @@ public:
 
 
         verticalLayout_3->addLayout(horizontalLayout_4);
+
+        horizontalLayout_5 = new QHBoxLayout();
+        horizontalLayout_5->setObjectName(QString::fromUtf8("horizontalLayout_5"));
+        label_5 = new QLabel(layoutWidget);
+        label_5->setObjectName(QString::fromUtf8("label_5"));
+
+        horizontalLayout_5->addWidget(label_5);
+
+        lineEdit_PassengerID = new QLineEdit(layoutWidget);
+        lineEdit_PassengerID->setObjectName(QString::fromUtf8("lineEdit_PassengerID"));
+
+        horizontalLayout_5->addWidget(lineEdit_PassengerID);
+
+
+        verticalLayout_3->addLayout(horizontalLayout_5);
 
         verticalLayout_2 = new QVBoxLayout();
         verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
@@ -173,6 +201,7 @@ public:
         Journey->setStatusBar(statusbar);
 #if QT_CONFIG(shortcut)
         label_4->setBuddy(lineEdit_PassengerName);
+        label_5->setBuddy(lineEdit_PassengerID);
         label_3->setBuddy(dateEdit);
 #endif // QT_CONFIG(shortcut)
 
@@ -196,8 +225,10 @@ public:
         actionAbout->setText(QCoreApplication::translate("Journey", "About", nullptr));
         actionAbout_Qt->setText(QCoreApplication::translate("Journey", "About Qt", nullptr));
         label_time->setText(QString());
+        pushButton_queryTickets->setText(QCoreApplication::translate("Journey", "Query Tickets", nullptr));
         pushButton_bookTicket->setText(QCoreApplication::translate("Journey", "Book Ticket", nullptr));
         label_4->setText(QCoreApplication::translate("Journey", "Name", nullptr));
+        label_5->setText(QCoreApplication::translate("Journey", "ID", nullptr));
         label->setText(QCoreApplication::translate("Journey", "From", nullptr));
         label_2->setText(QCoreApplication::translate("Journey", "To", nullptr));
         label_3->setText(QCoreApplication::translate("Journey", "Date", nullptr));

@@ -1,0 +1,11 @@
+From,To,Fare,Train_id,Depart_Time
+Beijing,Shanghai,520,1,10:00
+Beijing,Xi'an,780,2,11:00
+Shanghai,Hangzhou,100,3,12:00
+Hangzhou,Beijing,640,4,13:00
+Beijing,Guangzhou,1700,5,14:00
+Shanghai,Xi'an,1120,6,15:00
+Shanghai,Guangzhou,1237,7,16:00
+Hangzhou,Xi'an,905,8,17:00
+Hangzhou,Guangzhou,1164,9,18:00
+Guangzhou,Xi'an,1321,10,19:00

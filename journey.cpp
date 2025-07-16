@@ -8,6 +8,17 @@
 #include <QString>
 #include <QDebug>
 
+
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QUrlQuery>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QComboBox>
+#include <QMessageBox>
+
 Journey::Journey(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::Journey)
@@ -65,6 +76,7 @@ void Journey::on_actionHome_triggered()
 
 void Journey::on_pushButton_queryTicket_clicked()
 {
+    /*
     QFile file(":/fare.csv");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug() << file.errorString();
@@ -93,11 +105,11 @@ void Journey::on_pushButton_queryTicket_clicked()
         toList.append(parts.at(1).trimmed());
         fareList.append(parts.at(2).trimmed());
     }
-
+    */
     // 后面获取 fromStation/toStation 的方式不变：
-    QString fromStation = ui->textEdit->toPlainText().trimmed();
-    QString toStation   = ui->textEdit_2->toPlainText().trimmed();
-
+    //QString fromStation = ui->textEdit->toPlainText().trimmed();
+    //QString toStation   = ui->textEdit_2->toPlainText().trimmed();
+    /*
     if(fromStation == "----" ||
             toStation == "----")
         QMessageBox::warning(this, "Error!", "Please select From and To stations");
@@ -109,6 +121,7 @@ void Journey::on_pushButton_queryTicket_clicked()
 
 
         /*
+
          * l1 = ("a", "b", "d", "c", "d", "b")
          * l2 = ("b", "a", "b", "b", "a", "c")
          * l3 = (2, 4, 3, 5, 4, 5)  // fare
@@ -116,6 +129,7 @@ void Journey::on_pushButton_queryTicket_clicked()
          * if "d" and "a" are input then index will be 5 hence fare will be the value corresponding to index 5 in l3 i.e. 4
          * */
 
+    /*
         QString cost;
         int id = -1;
         for (int i = 0; i < fromList.size(); ++i) {
@@ -157,6 +171,62 @@ void Journey::on_pushButton_queryTicket_clicked()
                                  QString::number(rand() % 9)  // random number
                                  );
     }
+        */
+
+
+    //new query function
+    // 获取 fromStation/toStation/date,准备构建查询url
+    QString from = ui->textEdit->toPlainText().trimmed();
+    QString to   = ui->textEdit_2->toPlainText().trimmed();
+    QString date = ui->dateEdit->date().toString("yyyy-MM-dd");
+
+    // 构造请求
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this); // 创建网络管理器，负责发送 HTTP 请求
+
+    // 设置请求的 URL 和参数
+    QUrl url("http://127.0.0.1:8080/train"); // 后端查询接口地址
+    QUrlQuery query;
+    query.addQueryItem("from", from);   // 添加出发地参数
+    query.addQueryItem("to", to);       // 添加目的地参数
+    query.addQueryItem("date", date);   // 添加日期参数
+    url.setQuery(query);                // 将参数拼接到 URL
+
+    QNetworkRequest request(url);       // 创建请求对象
+    QNetworkReply *reply = manager->get(request); // 发送 GET 请求，返回结果 reply
+
+    // 当请求完成时，处理返回结果
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        QByteArray res = reply->readAll(); // 读取返回的数据
+        QJsonDocument doc = QJsonDocument::fromJson(res); // 解析为 JSON 文档
+
+        // 检查返回数据是否为 JSON 数组（即多条车次信息）
+        if (!doc.isArray()) {
+            QMessageBox::warning(this, "错误", "返回数据格式不正确"); // 格式错误时弹窗提示
+            reply->deleteLater();   // 释放 reply 对象
+            manager->deleteLater(); // 释放 manager 对象
+            return;
+        }
+
+        QJsonArray arr = doc.array(); // 获取 JSON 数组
+        ui->listWidget_trains->clear(); // 清空之前的列表内容
+
+        // 遍历每一条车次信息，添加到列表
+        for (const QJsonValue &v : arr) {
+            QJsonObject obj = v.toObject(); // 转换为 JSON 对象
+            // 拼接显示内容，比如 "G123 | 12:00 | 北京 | 350元"
+            QString item = QString("%1 | %2 | %3 | %4元")
+                               .arg(obj.value("trainid").toString())   // 车次ID
+                               .arg(obj.value("time").toString())      // 发车时间
+                               .arg(obj.value("depart").toString())    // 出发地
+                               .arg(obj.value("price").toDouble());    // 票价
+
+            QListWidgetItem *listItem = new QListWidgetItem(item); // 创建列表项
+            listItem->setData(Qt::UserRole, obj.value("trainid").toString()); // 用于存储车次ID（方便后续使用）
+            ui->listWidget_trains->addItem(listItem); // 添加到 QListWidget
+        }
+        reply->deleteLater();   // 释放 reply 对象
+        manager->deleteLater(); // 释放 manager 对象
+    });
 }
 
 void Journey::on_dateEdit_dateChanged(const QDate &date)

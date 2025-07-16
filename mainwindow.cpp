@@ -20,7 +20,7 @@ void MainWindow::on_nextPassenger_clicked()
 {
     QString username = ui->lineEdit_username->text();
     QString password = ui->lineEdit_password->text();
-    if(username == "test" && password == "test"){
+    if(1||username == "test" && password == "test" ){
         jou1 = new Journey(this);
         this->hide();
         jou1->show();

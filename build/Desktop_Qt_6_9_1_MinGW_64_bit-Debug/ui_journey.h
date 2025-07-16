@@ -16,6 +16,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
@@ -53,6 +54,7 @@ public:
     QHBoxLayout *horizontalLayout_3;
     QLabel *label_3;
     QDateEdit *dateEdit;
+    QListWidget *listWidget_trains;
     QMenuBar *menubar;
     QMenu *menuFile;
     QMenu *menuHelp;
@@ -81,7 +83,7 @@ public:
         label_time->setFont(font);
         pushButton_queryTicket = new QPushButton(centralwidget);
         pushButton_queryTicket->setObjectName("pushButton_queryTicket");
-        pushButton_queryTicket->setGeometry(QRect(70, 130, 81, 28));
+        pushButton_queryTicket->setGeometry(QRect(80, 100, 81, 28));
         layoutWidget = new QWidget(centralwidget);
         layoutWidget->setObjectName("layoutWidget");
         layoutWidget->setGeometry(QRect(20, 160, 212, 171));
@@ -159,6 +161,9 @@ public:
 
         verticalLayout_3->addLayout(verticalLayout_2);
 
+        listWidget_trains = new QListWidget(centralwidget);
+        listWidget_trains->setObjectName("listWidget_trains");
+        listWidget_trains->setGeometry(QRect(270, 140, 256, 192));
         Journey->setCentralWidget(centralwidget);
         menubar = new QMenuBar(Journey);
         menubar->setObjectName("menubar");

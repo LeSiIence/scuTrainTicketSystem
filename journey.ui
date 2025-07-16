@@ -35,8 +35,8 @@
    <widget class="QPushButton" name="pushButton_queryTicket">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>130</y>
+      <x>80</x>
+      <y>100</y>
       <width>81</width>
       <height>28</height>
      </rect>
@@ -130,6 +130,16 @@
       </layout>
      </item>
     </layout>
+   </widget>
+   <widget class="QListWidget" name="listWidget_trains">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>140</y>
+      <width>256</width>
+      <height>192</height>
+     </rect>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
